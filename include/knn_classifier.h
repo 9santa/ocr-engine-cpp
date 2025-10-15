@@ -2,9 +2,9 @@
 #define KNN_CLASSIFIER_H
 
 #include <vector>
-// #include <algorithm>
-// #include <cmath>
-// #include <map>
+#include <algorithm>
+#include <cmath>
+#include <map>
 
 struct TrainingSample {
     std::vector<float> features;
