@@ -14,7 +14,7 @@ private:
     cv::Mat applyGrayscale(const cv::Mat& input);
     cv::Mat applyThreshold(const cv::Mat& input);
     cv::Mat removeNoise(const cv::Mat& input);
-
+    std::vector<cv::Rect> findDigitCountours(const cv::Mat& binary);
 };
 
 
