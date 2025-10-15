@@ -32,7 +32,7 @@ std::vector<std::pair<int, float>> KNNClassifier::findKNearest(const std::vector
             });
 
     // Return k nearest neighbors
-    if ((int)distances.size() > k) {
+    if (static_cast<int>(distances.size()) > k) {
         distances.resize(k);
     }
 
