@@ -1,24 +1,36 @@
+#include "../include/cli.h"
 #include "../include/digit_ocr.h"
 #include "../include/bmp_reader.h"
 #include <iostream>
 
-signed main(void) {
-    DigitOCR ocr;
-    
-    // train or load model
-    std::cout << "1. Train new model\n2. Load existing model\nChoose: ";
-    unsigned short choice;
-    std::cin >> choice;
 
-    if (choice == 1) {
-        std::string dataPath;
-        std::cout << "Enter path to MNIST data folder: ";
-        std::cin >> dataPath;
-        ocr.trainModel(dataPath);
-        ocr.saveModel("trained_model.dat");
-    } else {
-        ocr.loadModel("trained_model.dat");
+void CLI::run() {
+    while(true) {
+        clearScreen();
+        std::cout << "=== Digit OCR ===\n";
+        std::cout << "1. Train Model\n";
+        std::cout << "2. Test on MNIST\n"; 
+        std::cout << "3. Test on Real Images\n";
+        std::cout << "4. Run Algorithm Tests\n";
+        std::cout << "5. Benchmark Performance\n";
+        std::cout << "6. Exit\n";
+        std::cout << "Choose: ";
+
+        short choice; std::cin >> choice;
+
+        switch (choice) {
+            case 1: trainingMenu(); break;
+            case 2: testingMenu(); break;
+            case 3: realImageMenu(); break;
+            case 4:
+                testSuite.runAllTests();
+                pressAnyKeyToContinue();
+                break;
+            case 5: benchmarkMenu(); break;
+            case 6: return;
+            default:
+                std::cout << "Invalid choice!\n";
+                pressAnyKeyToContinue();
+        }
     }
-
-    return 0;
 }
