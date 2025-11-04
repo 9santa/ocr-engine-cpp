@@ -1,13 +1,13 @@
-#include "feature_extractor.h"
+#include "../include/feature_extractor.h"
 #include <numeric>
 #include <ranges>
 
 FeatureExtractor::FeatureExtractor() {}
 
-std::vector<float> FeatureExtractor::extractFeatures(const cv::Mat& digit) {
+std::vector<float> FeatureExtractor::extractFeatures(const ImageMatrix& digit) {
     std::vector<float> features;
 
-    // Combine multiple feature extraction methods
+    // Combine multiple feature types
     auto pixelFeatures = extractPixelFeatures(digit);
     auto zoningFeatures = extractZoningFeatures(digit);
     auto projectionFeatures = extractProjectionFeatures(digit);
@@ -19,23 +19,24 @@ std::vector<float> FeatureExtractor::extractFeatures(const cv::Mat& digit) {
     return features;
 }
 
-std::vector<float> FeatureExtractor::extractPixelFeatures(const cv::Mat& digit) {
+std::vector<float> FeatureExtractor::extractPixelFeatures(const ImageMatrix& digit) {
     std::vector<float> features;
-    features.reserve(digit.rows + digit.cols);
+    features.reserve(digit.width * digit.height);
 
-    for (int i = 0; i < digit.rows; i++) {
-        for (int j = 0; j < digit.cols; j++) {
-            features.push_back(digit.at<uchar>(i, j) / 255.0f);
+    for (int y = 0; y < digit.height; y++) {
+        for (int x = 0; x < digit.width; x++) {
+            // normalize pixel values to [0, 1]
+            features.push_back(digit(y, x, 0) / 255.0f);
         }
     }
 
     return features;
 }
 
-std::vector<float> FeatureExtractor::extractZoningFeatures(const cv::Mat& digit) {
+std::vector<float> FeatureExtractor::extractZoningFeatures(const ImageMatrix& digit) {
     const int zones = 4;    // 4x4 grid
-    const int zoneHeight = digit.rows / zones;
-    const int zoneWidth = digit.cols / zones;
+    const int zoneHeight = digit.height / zones;
+    const int zoneWidth = digit.width / zones;
 
     std::vector<float> features;
     features.reserve(zones * zones);
@@ -44,15 +45,15 @@ std::vector<float> FeatureExtractor::extractZoningFeatures(const cv::Mat& digit)
         for (int j = 0; j < zones; j++) {
             int startY = i * zoneHeight;
             int startX = j * zoneWidth;
-            int endY = std::min((j + 1) * zoneHeight, digit.rows);
-            int endX = std::min((j + 1) * zoneWidth, digit.cols);
+            int endY = std::min((j + 1) * zoneHeight, digit.height);
+            int endX = std::min((j + 1) * zoneWidth, digit.width);
 
             float zoneSum = 0;
             int pixelCount = 0;
 
             for (int y = startY; y < endY; y++) {
                 for (int x = startX; x < endX; x++) {
-                    zoneSum += digit.at<uchar>(y, x);
+                    zoneSum += digit(y, x, 0);
                     pixelCount++;
                 }
             }
@@ -64,25 +65,25 @@ std::vector<float> FeatureExtractor::extractZoningFeatures(const cv::Mat& digit)
     return features;
 }
 
-std::vector<float> FeatureExtractor::extractProjectionFeatures(const cv::Mat& digit) {
+std::vector<float> FeatureExtractor::extractProjectionFeatures(const ImageMatrix& digit) {
     std::vector<float> features;
 
     // Horizontal projection
-    std::vector<float> horizontalProj(digit.rows, 0);
-    for (int i = 0; i < digit.rows; i++) {
-        for (int j = 0; j < digit.cols; j++) {
-            horizontalProj[i] += digit.at<uchar>(i, j);
+    std::vector<float> horizontalProj(digit.height, 0);
+    for (int y = 0; y < digit.height; y++) {
+        for (int x = 0; x < digit.width; x++) {
+            horizontalProj[y] += digit(y, x, 0);
         }
-        horizontalProj[i] /= (digit.cols * 255.0f);
+        horizontalProj[y] /= (digit.width * 255.0f);
     }
 
     // Vertical projection
-    std::vector<float> verticalProj(digit.cols, 0);
-    for (int j = 0; j < digit.cols; j++) {
-        for (int i = 0; i < digit.rows; i++) {
-            verticalProj[j] += digit.at<uchar>(i, j);
+    std::vector<float> verticalProj(digit.width, 0);
+    for (int x = 0; x < digit.width; x++) {
+        for (int y = 0; y < digit.height; y++) {
+            verticalProj[x] += digit(y, x, 0);
         }
-        verticalProj[j] /= (digit.rows * 255.0f);
+        verticalProj[x] /= (digit.height * 255.0f);
     }
 
     features.insert(features.end(), horizontalProj.begin(), horizontalProj.end());
