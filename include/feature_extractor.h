@@ -20,6 +20,7 @@ public:
     // utility methods
     void normalizeFeatures(std::vector<float>& features);
     int getFeatureDimensions() const;
+
 private:
     int zoningGridSize = 4; // 4x4 grid for zoning features
 
