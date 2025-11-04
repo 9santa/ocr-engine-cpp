@@ -100,8 +100,8 @@ bool MNISTLoader::loadTrainingData(const std::string& imagePath, const std::stri
 }
 
 bool MNISTLoader::loadTestData(const std::string& imagePath, const std::string& labelPath) {
-    if (!loadImages(imagePath, trainingData)) return false;
-    if (!loadLabels(labelPath, trainingData)) return false;
+    if (!loadImages(imagePath, testData)) return false;
+    if (!loadLabels(labelPath, testData)) return false;
 
     std::cout << "Successfuly loaded " << trainingData.size() << " test samples\n";
     return true;
