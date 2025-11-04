@@ -1,5 +1,6 @@
 #include "../include/digit_ocr.h"
 #include "../include/mnist_loader.h"
+#include "../include/preprocessor.h"
 #include <fstream>
 #include <iostream>
 
@@ -31,7 +32,7 @@ void DigitOCR::trainModel(const std::string& trainingDataPath) {
 
     for (const auto& mnistImage : mnistData) {
         TrainingSample sample;
-        sample.features = FeatureExtractor.extractFeatures(mnistImage.image);
+        sample.features = featureExtractor.extractFeatures(mnistImage.image);
         sample.label = mnistImage.label;
         trainingSamples.push_back(sample);
     }
@@ -51,7 +52,7 @@ std::string DigitOCR::recognize(const ImageMatrix& image) {
     std::string result;
 
     for (const auto& digit : digits) {
-        auto features = FeatureExtractor.extractFeatures(digit);
+        auto features = featureExtractor.extractFeatures(digit);
         int prediction = classifier.predict(features);
         result += std::to_string(prediction);
     }
@@ -89,4 +90,32 @@ void DigitOCR::saveModel(const std::string& filename) {
 //TODO
 void DigitOCR::loadModel(const std::string& filename) {
     std::cout << "Loading model from " << filename << "\n";
+
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Cannot load model from " << filename << "\n";
+        return;
+    }
+
+    trainingSamples.clear();
+    size_t sampleCount;
+    file.read((char*)&sampleCount, sizeof(sampleCount));
+
+    for (size_t i = 0; i < sampleCount; i++) {
+        TrainingSample sample;
+
+        // load label
+        file.read((char*)&sample.label, sizeof(sample.label));
+
+        // load features
+        size_t featuresCount;
+        file.read((char*)&featuresCount, sizeof(featuresCount));
+        sample.features.resize(featuresCount);
+        file.read((char*)sample.features.data(), featuresCount * sizeof(float));
+
+        trainingSamples.push_back(sample);
+    }
+
+    classifier.train(trainingSamples);
+    std::cout << "Model loaded from " << filename << " with " << sampleCount << " samples\n";
 }
