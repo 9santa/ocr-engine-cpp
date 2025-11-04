@@ -46,6 +46,12 @@ private:
         {1, 1, 1},
         {0, 1, 0}
     };
+
+    // size thresholds for digit filtering
+    int minDigitWidth = 10;
+    int minDigitHeight = 20;
+    int maxDigitWidth = 100;
+    int maxDigitHeight = 100;
 };
 
 
