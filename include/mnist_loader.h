@@ -1,13 +1,13 @@
 #ifndef MNIST_LOADER_H
 #define MNIST_LOADER_H
 
-#include "feature_extractor.h"
-#include "knn_classifier.h"
+#include "image_matrix.h"
 #include <vector>
+#include <string>
 
 struct MNISTImage {
-    cv::Mat image;
-    int lavel;
+    ImageMatrix image;
+    int label;
 };
 
 class MNISTLoader {
@@ -15,14 +15,12 @@ public:
     MNISTLoader();
     bool loadTrainingData(const std::string& imagePath, const std::string& labelPath);
     bool loadTestData(const std::string& imagePath, const std::string& labelPath);
-    std::vector<TrainingSample> getTrainingSamples() const;
-    std::vector<TrainingSample> getTestSamples() const;
-    void displaySample(int index, bool isTest = false) const;
+    std::vector<MNISTImage> getTrainingData() const;
+    std::vector<MNISTImage> getTestData() const;
 
 private:
     std::vector<MNISTImage> trainingData;
     std::vector<MNISTImage> testData;
-    FeatureExtractor feature_extractor;
 
     int reverseInt(int i);
     bool loadImages(const std::string& imagePath, std::vector<MNISTImage>& data);
