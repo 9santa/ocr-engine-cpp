@@ -19,6 +19,8 @@ public:
 
     // utility methods
     void normalizeFeatures(std::vector<float>& features);
+    
+    // returns total feature vector size
     int getFeatureDimensions() const;
 
 private:

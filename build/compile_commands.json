@@ -1,8 +1,0 @@
-[
-{
-  "directory": "/home/cohle/it/cpp/ocr_engine/build",
-  "command": "/usr/bin/c++  -I/home/cohle/it/cpp/ocr_engine/include -isystem /usr/local/include/opencv4 -std=gnu++17 -o CMakeFiles/ocr_engine.dir/src/test.cpp.o -c /home/cohle/it/cpp/ocr_engine/src/test.cpp",
-  "file": "/home/cohle/it/cpp/ocr_engine/src/test.cpp",
-  "output": "CMakeFiles/ocr_engine.dir/src/test.cpp.o"
-}
-]

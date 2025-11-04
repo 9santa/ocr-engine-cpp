@@ -1,23 +1,22 @@
 #ifndef DIGIT_OCR_H
 #define DIGIT_OCR_H
 
-#include "preprocessor.h"
 #include "feature_extractor.h"
 #include "knn_classifier.h"
-#include <opencv2/opencv.hpp>
+#include "image_matrix.h"
 #include <vector>
 #include <string>
 
 class DigitOCR {
 public:
     DigitOCR();
+
     void trainModel(const std::string& trainingDataPath);
-    std::string recognize(const cv::Mat& image);
+    std::string recognize(const ImageMatrix& image);
     void saveModel(const std::string& filename);
     void loadModel(const std::string& filename);
 
 private:
-    DigitPreprocessor preprocessor;
     FeatureExtractor FeatureExtractor;
     KNNClassifier classifier;
     std::vector<TrainingSample> trainingSamples;

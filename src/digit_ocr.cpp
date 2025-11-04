@@ -86,6 +86,7 @@ void DigitOCR::saveModel(const std::string& filename) {
     std::cout << "Model saved to " << filename << " with " << sampleCount << " samples\n";
 }
 
+//TODO
 void DigitOCR::loadModel(const std::string& filename) {
     std::cout << "Loading model from " << filename << "\n";
 }

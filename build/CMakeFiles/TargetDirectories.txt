@@ -1,3 +1,0 @@
-/home/cohle/it/cpp/ocr_engine/build/CMakeFiles/ocr_engine.dir
-/home/cohle/it/cpp/ocr_engine/build/CMakeFiles/edit_cache.dir
-/home/cohle/it/cpp/ocr_engine/build/CMakeFiles/rebuild_cache.dir
