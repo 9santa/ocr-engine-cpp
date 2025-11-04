@@ -1,18 +1,27 @@
+#pragma once
 #ifndef FEATURE_EXTRACTOR_H
 #define FEATURE_EXTRACTOR_H
 
-#include <opencv2/opencv.hpp>
+#include "image_matrix.h"
 #include <vector>
 
 class FeatureExtractor {
 public:
     FeatureExtractor();
-    std::vector<float> extractFeatures(const cv::Mat& digit);
 
+    // main feature extractor method, combines all feature types
+    std::vector<float> extractFeatures(const ImageMatrix& digit);
+
+    // individual feature extraction methods
+    std::vector<float> extractPixelFeatures(const ImageMatrix& digit);
+    std::vector<float> extractZoningFeatures(const ImageMatrix& digit);
+    std::vector<float> extractProjectionFeatures(const ImageMatrix& digit);
+
+    // utility methods
+    void normalizeFeatures(std::vector<float>& features);
+    int getFeatureDimensions() const;
 private:
-    std::vector<float> extractPixelFeatures(const cv::Mat& digit);
-    std::vector<float> extractZoningFeatures(const cv::Mat& digit);
-    std::vector<float> extractProjectionFeatures(const cv::Mat& digit);
+    int zoningGridSize = 4; // 4x4 grid for zoning features
 
 };
 
