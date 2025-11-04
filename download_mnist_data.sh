@@ -4,11 +4,13 @@
 mkdir -p data
 cd data
 
+echo "Downloading MNIST dataset..."
+
 # Download MNIST dataset
-wget http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
-wget http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
-wget http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
-wget http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+wget https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz
+wget https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz
+wget https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz
+wget https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz
 
 # Extract files
 gunzip train-images-idx3-ubyte.gz
