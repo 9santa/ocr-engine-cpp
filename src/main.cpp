@@ -1,31 +1,24 @@
-#include "digit_ocr.h"
-#include <opencv2/core/types.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/opencv.hpp>
+#include "../include/digit_ocr.h"
+#include "../include/bmp_reader.h"
 #include <iostream>
 
 signed main(void) {
     DigitOCR ocr;
+    
+    // train or load model
+    std::cout << "1. Train new model\n2. Load existing model\nChoose: ";
+    unsigned short choice;
+    std::cin >> choice;
 
-
-
-    cv::Mat image = cv::imread("test_digits.png");
-    if (image.empty()) {
-        std::cout << "Could not load test image!\n";
-        return -1;
+    if (choice == 1) {
+        std::string dataPath;
+        std::cout << "Enter path to MNIST data folder: ";
+        std::cin >> dataPath;
+        ocr.trainModel(dataPath);
+        ocr.saveModel("trained_model.dat");
+    } else {
+        ocr.loadModel("trained_model.dat");
     }
-
-    // Recognize digits
-    std::string result = ocr.recognize(image);
-    std::cout << "Recognized digits: " << result << "\n";
-
-    // Display result
-    cv::putText(image, "Digits: " + result, cv::Point(10, 30), cv::FONT_HERSHEY_COMPLEX,
-            1, cv::Scalar(0, 255, 0), 2);
-
-    cv::imshow("OCR Result", image);
-    cv::waitKey(0);
 
     return 0;
 }
