@@ -30,8 +30,8 @@ public:
         Value out(a->data + b->data, {a, b}, "+");
 
         out._backward = [a, b, &out]() {
-            a->grad = 1.0 * out.grad;
-            b->grad = 1.0 * out.grad;
+            a->grad += 1.0 * out.grad;
+            b->grad += 1.0 * out.grad;
         };
 
         return out;
@@ -56,8 +56,8 @@ public:
         Value out(a->data * b->data, {a, b}, op = "*");
 
         out._backward = [a, b, &out]() {
-            a->grad = b->data * out.grad;
-            b->grad = a->data * out.grad;
+            a->grad += b->data * out.grad;
+            b->grad += a->data * out.grad;
         };
 
         return out;
