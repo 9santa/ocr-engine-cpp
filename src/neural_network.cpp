@@ -81,13 +81,15 @@ public:
 // loss function: Mean-Squared Error
 std::vector<Value> MSE(std::vector<Value>& ys, std::vector<Value>& ypred) {
     std::vector<Value> losses;
-    double loss = 0;
+    Value total_loss(0.0);
     for (size_t i = 0; i < ys.size(); i++) {
-        losses.emplace_back((ys[i]-ypred[i])*(ys[i]-ypred[i]));
-        loss += losses[i].data;
+        auto diff = ys[i] - ypred[i];
+        auto diffsq = diff*diff;
+        losses.push_back(diffsq);
+        total_loss += diffsq;
     }
 
-    losses.insert(losses.begin(), loss);
+    losses.insert(losses.begin(), total_loss);
     return losses;
 }
 
@@ -120,8 +122,8 @@ signed main(void) {
 
     auto loss = MSE(ys, ypred);
     for (const auto& l : loss) std::cout << l;
-    // summed up loss
-    std::cout << "Summed up loss: " << loss[0];
+    // total loss
+    std::cout << "Total loss: " << loss[0];
 
     return 0;
 }
