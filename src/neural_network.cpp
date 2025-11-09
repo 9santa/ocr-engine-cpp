@@ -113,7 +113,7 @@ ValPtr MSE(const std::vector<ValPtr>& ys, const std::vector<ValPtr>& ypred) {
     return total_loss;
 }
 
-void train(MLP& l, std::vector<std::vector<ValPtr>> input, const std::vector<ValPtr>& ys) {
+void train(MLP& l, const std::vector<std::vector<ValPtr>>& input, const std::vector<ValPtr>& ys) {
     std::vector<ValPtr> final_pred;
     int iterations = 40;
     for (int i = 0; i <= iterations; i++) {
