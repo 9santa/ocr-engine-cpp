@@ -45,7 +45,7 @@ std::vector<float> FeatureExtractor::extractZoningFeatures(const ImageMatrix& di
         for (int j = 0; j < zones; j++) {
             int startY = i * zoneHeight;
             int startX = j * zoneWidth;
-            int endY = std::min((j + 1) * zoneHeight, digit.height);
+            int endY = std::min((i + 1) * zoneHeight, digit.height);
             int endX = std::min((j + 1) * zoneWidth, digit.width);
 
             float zoneSum = 0;
@@ -53,12 +53,12 @@ std::vector<float> FeatureExtractor::extractZoningFeatures(const ImageMatrix& di
 
             for (int y = startY; y < endY; y++) {
                 for (int x = startX; x < endX; x++) {
-                    zoneSum += digit(y, x, 0);
+                    zoneSum += digit(y, x, 0) / 255.0f;
                     pixelCount++;
                 }
             }
 
-            features.push_back(zoneSum / (pixelCount * 255.0f));
+            features.push_back(zoneSum / pixelCount);
         }
     }
 
@@ -72,18 +72,18 @@ std::vector<float> FeatureExtractor::extractProjectionFeatures(const ImageMatrix
     std::vector<float> horizontalProj(digit.height, 0);
     for (int y = 0; y < digit.height; y++) {
         for (int x = 0; x < digit.width; x++) {
-            horizontalProj[y] += digit(y, x, 0);
+            horizontalProj[y] += digit(y, x, 0) / 255.0f;
         }
-        horizontalProj[y] /= (digit.width * 255.0f);
+        horizontalProj[y] /= digit.width;
     }
 
     // Vertical projection
     std::vector<float> verticalProj(digit.width, 0);
     for (int x = 0; x < digit.width; x++) {
         for (int y = 0; y < digit.height; y++) {
-            verticalProj[x] += digit(y, x, 0);
+            verticalProj[x] += digit(y, x, 0) / 255.0f;
         }
-        verticalProj[x] /= (digit.height * 255.0f);
+        verticalProj[x] /= digit.height;
     }
 
     features.insert(features.end(), horizontalProj.begin(), horizontalProj.end());
