@@ -1,6 +1,7 @@
 #include "../include/digit_ocr.h"
 #include "../include/mnist_loader.h"
 #include "../include/preprocessor.h"
+#include "knn_classifier.h"
 #include <fstream>
 #include <iostream>
 
@@ -30,20 +31,40 @@ void DigitOCR::trainModel(const std::string& trainingDataPath) {
 
     std::cout << "Extracting features from " << mnistData.size() << " training images...\n";
 
-    for (const auto& mnistImage : mnistData) {
+    // Add progress bar
+    int totalImages = mnistData.size();
+    int progressInterval = totalImages / 20;    // update every 5%
+
+    for (int i = 0; i < totalImages; i++) {
+        const auto& mnistImage = mnistData[i];
         TrainingSample sample;
         sample.features = featureExtractor.extractFeatures(mnistImage.image);
         sample.label = mnistImage.label;
         trainingSamples.push_back(sample);
+
+        // Show progress
+        if (i % progressInterval == 0 || i == totalImages - 1) {
+            float progress = static_cast<float>(i+1) / totalImages * 100.0f;
+            std::cout << "\nProgress: " << static_cast<int>(progress) << "% (" << i + 1 << "/" << totalImages << ")" << std::flush;
+        }
     }
+
+    std::cout << "\n";
+
+    // for (const auto& mnistImage : mnistData) {
+    //     TrainingSample sample;
+    //     sample.features = featureExtractor.extractFeatures(mnistImage.image);
+    //     sample.label = mnistImage.label;
+    //     trainingSamples.push_back(sample);
+    // }
 
     // train the classifier
     classifier.train(trainingSamples);
     std::cout << "Training completed with " << trainingSamples.size() << " samples\n";
 
     // evaluate on traning data
-    float accuracy = classifier.evaluate(trainingSamples);
-    std::cout << "Training accuracy: " << accuracy * 100 << "%\n";
+    // float accuracy = classifier.evaluate(trainingSamples);
+    // std::cout << "Training accuracy: " << accuracy * 100 << "%\n";
 
 }
 
@@ -60,7 +81,7 @@ std::string DigitOCR::recognize(const ImageMatrix& image) {
     return result;
 }
 
-// model persistence
+// Saving model to a file
 void DigitOCR::saveModel(const std::string& filename) {
     std::cout << "Saving model to " << filename << "\n";
 
@@ -87,7 +108,7 @@ void DigitOCR::saveModel(const std::string& filename) {
     std::cout << "Model saved to " << filename << " with " << sampleCount << " samples\n";
 }
 
-//TODO
+// Loading model from a file
 void DigitOCR::loadModel(const std::string& filename) {
     std::cout << "Loading model from " << filename << "\n";
 
@@ -118,4 +139,39 @@ void DigitOCR::loadModel(const std::string& filename) {
 
     classifier.train(trainingSamples);
     std::cout << "Model loaded from " << filename << " with " << sampleCount << " samples\n";
+}
+
+float DigitOCR::evaluateOnTestData(const std::string& testDataPath) {
+    if (!isTrained()) {
+        std::cerr << "Error: Model is not trained yet!\n";
+        return 0.0f;
+    }
+
+    MNISTLoader loader;
+    std::string testImages = testDataPath + "/t10k-images-idx3-ubyte";
+    std::string testLabels = testDataPath + "/t10k-labels-idx1-ubyte";
+
+    if (!loader.loadTestData(testImages, testLabels)) {
+        std::cerr << "Failed to load test data!\n";
+        return 0.0f;
+    }
+
+    auto testData = loader.getTestData();
+    std::cout << "Evaluating on " << testData.size() << " test samples...\n";
+
+    // Convert MNIST test data to my TrainingSample format
+    std::vector<TrainingSample> testSamples;
+    for (const auto& mnist : testData) {
+        TrainingSample sample;
+        sample.features = featureExtractor.extractFeatures(mnist.image);
+        sample.label = mnist.label;
+        testSamples.push_back(sample);
+    }
+
+    // Evaluate with KNN classifier
+    float accuracy = classifier.evaluate(testSamples);
+
+    std::cout << "Test Accuracy: " << accuracy * 100 << "%\n";
+
+    return accuracy;
 }

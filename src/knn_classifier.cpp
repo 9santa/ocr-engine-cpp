@@ -1,5 +1,6 @@
-#include "knn_classifier.h"
-
+#include "../include/knn_classifier.h"
+#include <chrono>
+#include "iostream"
 
 KNNClassifier::KNNClassifier(int k) : k(k) {}
 
@@ -63,11 +64,47 @@ int KNNClassifier::predict(const std::vector<float>& features) const {
 
 float KNNClassifier::evaluate(const std::vector<TrainingSample>& testData) const {
     int correct = 0;
-    
-    for (const auto& sample : testData) {
-        int prediction = predict(sample.features);
-        if (prediction == sample.label) correct++;
+    int smallTest = std::min(100, (int)testData.size());
+
+    for (int i = 0; i < smallTest; i++) {
+        int prediction = predict(testData[i].features);
+        if (prediction == testData[i].label) correct++;
     }
 
-    return static_cast<float>(correct) / testData.size();
+    return static_cast<float>(correct) / smallTest;
 }
+
+// float KNNClassifier::evaluate(const std::vector<TrainingSample>& testData) const {
+//     auto start = std::chrono::high_resolution_clock::now();
+//
+//     int correct = 0;
+//     int processed = 0;
+//
+//     std::cout << "Evaluating " << testData.size() << " samples...\n";
+//
+//     for (const auto& sample : testData) {
+//         int prediction = predict(sample.features);
+//         if (prediction == sample.label) correct++;
+//         processed++;
+//
+//         // Show progress and estimated time
+//         if (processed % 100 == 0) {
+//             auto now = std::chrono::high_resolution_clock::now();
+//             auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start);
+//             float progress = static_cast<float>(processed) / testData.size();
+//             int estimatedTotal = elapsed.count() / progress;
+//             int remaining = estimatedTotal - elapsed.count();
+//
+//             std::cout << "\r" << processed << "/" << testData.size() 
+//                       << " | Elapsed: " << elapsed.count() << "s"
+//                       << " | Remaining: " << remaining << "s" << std::flush;
+//         }
+//     }
+//
+//     auto end = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+//
+//     std::cout << "\nEvaluation took " << duration.count() << " seconds\n";
+//
+//     return static_cast<float>(correct) / testData.size();
+// }

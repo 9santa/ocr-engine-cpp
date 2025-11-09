@@ -1,3 +1,4 @@
+#pragma once
 #ifndef KNN_CLASSIFIER_H
 #define KNN_CLASSIFIER_H
 
@@ -23,7 +24,7 @@ private:
     std::vector<TrainingSample> trainingData;
 
     float euclideanDistance(const std::vector<float>& a, const std::vector<float>& b) const;
-    
+
     std::vector<std::pair<int, float>> findKNearest(const std::vector<float>& features) const;
 };
 

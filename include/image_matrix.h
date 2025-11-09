@@ -16,9 +16,13 @@ public:
     ImageMatrix(int w, int h, int c, unsigned char value = 0);
 
     // access
-    inline unsigned char& operator()(int y, int x, int c);
-    inline const unsigned char& operator()(int y, int x, int c) const;
+    inline unsigned char& operator()(int y, int x, int c) {
+        return data[(y * width + x) * channels + c];
+    }
 
+    inline const unsigned char& operator()(int y, int x, int c) const {
+        return data[(y * width + x) * channels + c];
+    }
     // basic utilities
     bool empty() const;
     void fill(unsigned char value);
@@ -28,7 +32,7 @@ public:
     bool load(const std::string& path);
     bool save(const std::string& path);
 
-    // conversions
+    // conversions (absolete, implemented in Prepocessor class)
     ImageMatrix to_grayscale() const;
 };
 
