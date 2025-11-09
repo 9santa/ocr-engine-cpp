@@ -72,8 +72,8 @@ public:
         return out;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Value& v) {
-        os << "Value " << v.label << "(data= " << v.data << ")\n";
+    friend std::ostream& operator<<(std::ostream& os, const ValPtr& v) {
+        os << "Value " << v->label << "(data= " << v->data << ")\n";
         return os;
     }
 

@@ -114,7 +114,9 @@ ValPtr MSE(const std::vector<ValPtr>& ys, const std::vector<ValPtr>& ypred) {
 }
 
 void train(MLP& l, std::vector<std::vector<ValPtr>> input, const std::vector<ValPtr>& ys) {
-    for (int i = 0; i <= 20; i++) {
+    std::vector<ValPtr> final_pred;
+    int iterations = 40;
+    for (int i = 0; i <= iterations; i++) {
         // zero gradients
         for (auto& p : l.parameters()) {
             p->grad = 0.0;
@@ -133,11 +135,17 @@ void train(MLP& l, std::vector<std::vector<ValPtr>> input, const std::vector<Val
 
         // update (gradient descent)
         for (auto& p : l.parameters()) {
-            p->data -= 1 * p->grad;
+            p->data -= 0.1 * p->grad;
         }
 
         std::cout << "Iteration: " << i << ", loss=" << loss->data << "\n";
+
+        if (i == iterations) {
+            final_pred.insert(final_pred.end(), ypred.begin(), ypred.end());
+        }
     }
+
+    for (auto pred : final_pred) std::cout << pred;
 }
 
 
