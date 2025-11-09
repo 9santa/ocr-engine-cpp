@@ -1,63 +1,72 @@
 #include <cmath>
+#include <ctime>
 #include <iomanip>
 #include <ios>
+#include <memory>
 #include <ostream>
 #include <set>
 #include <string>
 #include <functional>
 #include <iostream>
 
-class Value {
+class Value;
+using ValPtr = std::shared_ptr<Value>;
+
+class Value : public std::enable_shared_from_this<Value> {
 public:
     double data;
     double grad;
     std::string label;
     std::string op;
 
-    std::set<Value*> prev;
+    std::set<ValPtr> prev;
     std::function<void()> _backward;
 
-    Value(double data, std::set<Value*> _children = {}, std::string _op = "", double grad = 0.0, std::string label = "")
+    Value(double data, std::set<ValPtr> _children = {}, std::string _op = "", double grad = 0.0, std::string label = "")
         : data(data), grad(grad), label(label), op(_op), prev(_children)
     {
         _backward = []() {};
     }
 
     // Operator overloads
-    Value operator+(const Value& other) {
-        Value* a = this;
-        Value* b = const_cast<Value*>(&other);
-        Value out(a->data + b->data, {a, b}, "+");
+    ValPtr operator+(const ValPtr& other) {
+        ValPtr out = std::make_shared<Value>(data + other->data, std::set<ValPtr>{shared_from_this(), other}, "+");
 
-        out._backward = [a, b, &out]() {
-            a->grad += 1.0 * out.grad;
-            b->grad += 1.0 * out.grad;
+        out->_backward = [self=shared_from_this(), other, out]() {
+            self->grad += 1.0 * out->grad;
+            other->grad += 1.0 * out->grad;
         };
 
         return out;
     }
 
-    Value& operator+=(const Value& other) {
-        *this = *this + other;
-        return *this;
+    void operator+=(const ValPtr& other) {
+        ValPtr tmp = *shared_from_this() + other;
+
+        data = tmp->data;
+        grad = tmp->grad;
+        op = tmp->op;
+        prev = tmp->prev;
+        _backward = tmp->_backward;
     }
 
-    Value operator-(const Value& other) {
-        Value* a = this;
-        Value* b = const_cast<Value*>(&other);
-        Value out(a->data - b->data, {a, b}, "-");
+    ValPtr operator-(const ValPtr& other) {
+        ValPtr out = std::make_shared<Value>(data - other->data, std::set<ValPtr>{shared_from_this(), other}, "-");
+
+        out->_backward = [self=shared_from_this(), other, out]() {
+            self->grad += 1.0 * out->grad;
+            other->grad += -1.0 * out->grad;
+        };
 
         return out;
     }
 
-    Value operator*(const Value& other) {
-        Value* a = this;
-        Value* b = const_cast<Value*>(&other);
-        Value out(a->data * b->data, {a, b}, op = "*");
+    ValPtr operator*(const ValPtr& other) {
+        ValPtr out = std::make_shared<Value>(data * other->data, std::set<ValPtr>{shared_from_this(), other}, "*");
 
-        out._backward = [a, b, &out]() {
-            a->grad += b->data * out.grad;
-            b->grad += a->data * out.grad;
+        out->_backward = [self=shared_from_this(), other, out]() {
+            self->grad += other->data * out->grad;
+            other->grad += self->data * out->grad;
         };
 
         return out;
@@ -68,24 +77,23 @@ public:
         return os;
     }
 
-    Value tanh() {
+    ValPtr tanh() {
         double x = this->data;
         double func = (std::exp(2*x) - 1) / (std::exp(2*x) + 1);
-        Value out(func, {this}, "tanh");
+        ValPtr out = std::make_shared<Value>(func, std::set<ValPtr>{shared_from_this()}, "tanh");
 
-        auto _backward = [this, func, &out]() {
-            this->grad += (1 - func*func) * out.grad;
+        out->_backward = [self=shared_from_this(), func, out]() {
+            self->grad += (1 - func*func) * out->grad;
         };
 
-        out._backward = _backward;
         return out;
     }
 
     void backward() {
-        std::vector<Value*> topo;
-        std::set<Value*> visited;
+        std::vector<ValPtr> topo;
+        std::set<ValPtr> visited;
 
-        auto topologicalSort = [&](auto&& self, Value* v) -> void {
+        auto topologicalSort = [&](auto&& self, ValPtr v) -> void {
             if (!visited.contains(v)) {
                 visited.insert(v);
                 for (const auto& child : v->prev) {
@@ -95,7 +103,7 @@ public:
             }
         };
 
-        topologicalSort(topologicalSort, this);
+        topologicalSort(topologicalSort, shared_from_this());
         this->grad = 1.0;
 
         for (auto it = topo.rbegin(); it != topo.rend(); it++) {
@@ -104,20 +112,20 @@ public:
     }
 
     // activation function: rectified linear unit
-    Value relu() {
+    ValPtr relu() {
         double relu_data = std::max(0.0, this->data);
-        Value out(relu_data, {const_cast<Value*>(this)}, "ReLU");
+        ValPtr out = std::make_shared<Value>(relu_data, std::set<ValPtr>{shared_from_this()}, "ReLU");
 
         // define backward pass
-        out._backward = [this, &out]() {
-            this->grad += (this->data > 0 ? 1.0 : 0.0) * out.grad;
+        out->_backward = [self=shared_from_this(), out]() {
+            self->grad += (self->data > 0 ? 1.0 : 0.0) * out->grad;
         };
 
         return out;
     }
 };
 
-
+#if 0
 signed main1(void) {
     double delta = 0.0001;
 
@@ -163,3 +171,4 @@ signed main1(void) {
 
     return 0;
 }
+#endif

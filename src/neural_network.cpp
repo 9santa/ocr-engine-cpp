@@ -1,41 +1,40 @@
 #include "gradient.cpp"
 #include <cstddef>
+#include <memory>
 #include <random>
 #include <variant>
 
 
 class Neuron {
 public:
-    std::vector<Value> w;   // weights
-    Value b;                // bias
+    std::vector<ValPtr> w;   // weights
+    ValPtr b;                // bias
     bool nonlin;
 
-    Neuron(int nin, bool nonlin=true)
-        : b(0.0), nonlin(nonlin)
-    {
+    Neuron(int nin, bool nonlin=true) : nonlin(nonlin) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(-1.0, 1.0);
 
-        w.reserve(nin);
         for (int i = 0; i < nin; i++) {
-            w.emplace_back(dis(gen));
+            w.push_back(std::make_shared<Value>(dis(gen)));
         }
+        b = std::make_shared<Value>(0.0);
     }
 
-    Value operator()(const std::vector<Value>& x) {
-        Value act = b;
+    ValPtr operator()(const std::vector<ValPtr>& x) {
+        ValPtr act = b;
         for (size_t i = 0; i < w.size(); i++) {
-            act += w[i] * x[i];
+            ValPtr wx = *w[i] * x[i];
+            act = *act + wx;
         }
         // return nonlin ? act.relu() : act;
-        return nonlin ? act.tanh() : act;
+        return nonlin ? act->tanh() : act;
     }
 
-    std::vector<Value*> parameters() {
-        std::vector<Value*> params;
-        for (auto& wi : w) params.push_back(&wi);
-        params.push_back(&b);
+    std::vector<ValPtr> parameters() {
+        std::vector<ValPtr> params = w;
+        params.push_back(b);
         return params;
     }
 };
@@ -52,19 +51,18 @@ public:
     }
 
     using LayerOutput = std::variant<Value, std::vector<Value>>;
-    std::vector<Value> operator()(const std::vector<Value>& x) {
-        std::vector<Value> outs;
-        for (auto& n : neurons) {
-            outs.push_back(n(x));
-        }
+    std::vector<ValPtr> operator()(const std::vector<ValPtr>& x) {
+        std::vector<ValPtr> outs;
+        for (auto& n : neurons) outs.push_back(n(x));
+
         // return (outs.size() == 1 ? outs[0] : outs);
         return outs;
     }
 
-    std::vector<Value*> parameters() {
-        std::vector<Value*> params;
+    std::vector<ValPtr> parameters() {
+        std::vector<ValPtr> params;
         for (auto& n : neurons) {
-            std::vector<Value*> np = n.parameters();
+            auto np = n.parameters();
             params.insert(params.end(), np.begin(), np.end());
         }
         return params;
@@ -86,7 +84,7 @@ public:
 
     }
 
-    std::vector<Value> operator()(const std::vector<Value>& x) {
+    std::vector<ValPtr> operator()(const std::vector<ValPtr>& x) {
         auto output = x;
         for (auto& layer : layers) {
             output = layer(output);
@@ -94,10 +92,10 @@ public:
         return output;
     }
 
-    std::vector<Value*> parameters() {
-        std::vector<Value*> params;
+    std::vector<ValPtr> parameters() {
+        std::vector<ValPtr> params;
         for (auto& l : layers) {
-            std::vector<Value*> lp = l.parameters();
+            std::vector<ValPtr> lp = l.parameters();
             params.insert(params.end(), lp.begin(), lp.end());
         }
         return params;
@@ -105,20 +103,42 @@ public:
 };
 
 // loss function: Mean-Squared Error
-std::vector<Value> MSE(std::vector<Value>& ys, std::vector<Value>& ypred) {
-    std::vector<Value> losses;
-    Value total_loss(0.0);
+ValPtr MSE(const std::vector<ValPtr>& ys, const std::vector<ValPtr>& ypred) {
+    ValPtr total_loss = std::make_shared<Value>(0.0);
     for (size_t i = 0; i < ys.size(); i++) {
-        auto diff = ys[i] - ypred[i];
-        auto diffsq = diff*diff;
-        losses.push_back(diffsq);
-        total_loss += diffsq;
+        auto diff = *ys[i] - ypred[i];
+        auto sq = *diff * diff;
+        total_loss = *total_loss + sq;
     }
-
-    losses.insert(losses.begin(), total_loss);
-    return losses;
+    return total_loss;
 }
 
+void train(MLP& l, std::vector<std::vector<ValPtr>> input, const std::vector<ValPtr>& ys) {
+    for (int i = 0; i <= 20; i++) {
+        // zero gradients
+        for (auto& p : l.parameters()) {
+            p->grad = 0.0;
+        }
+
+        // forward pass
+        std::vector<ValPtr> ypred;
+        for (auto&x : input) {
+            ypred.push_back(l(x)[0]);
+        }
+
+        auto loss = MSE(ys, ypred);
+
+        // backward pass
+        loss->backward();
+
+        // update (gradient descent)
+        for (auto& p : l.parameters()) {
+            p->data -= 1 * p->grad;
+        }
+
+        std::cout << "Iteration: " << i << ", loss=" << loss->data << "\n";
+    }
+}
 
 
 signed main(void) {
@@ -130,32 +150,42 @@ signed main(void) {
     for (auto& out : output) std::cout << out;
     #endif
 
-    std::vector<std::vector<Value>> xs = {
-        {2.0, 3.0, -1.0},
-        {3.0, -1.0, 0.5},
-        {0.5, 1.0, 1.0},
-        {1.0, 1.0, -1.0}
+    std::vector<std::vector<ValPtr>> xs = {
+        {std::make_shared<Value>(2.0), std::make_shared<Value>(3.0), std::make_shared<Value>(-1.0)},
+        {std::make_shared<Value>(3.0), std::make_shared<Value>(-1.0), std::make_shared<Value>(0.5)},
+        {std::make_shared<Value>(0.5), std::make_shared<Value>(1.0), std::make_shared<Value>(1.0)},
+        {std::make_shared<Value>(1.0), std::make_shared<Value>(1.0), std::make_shared<Value>(-1.0)}
     };
-    std::vector<Value> ys = {1.0, -1.0, -1.0, 1.0};
+
+    std::vector<ValPtr> ys = {
+        std::make_shared<Value>(1.0),
+        std::make_shared<Value>(-1.0),
+        std::make_shared<Value>(-1.0),
+        std::make_shared<Value>(1.0)
+    };
 
     MLP l(3, {4, 4, 1});
-    std::vector<Value> ypred;
-    for (auto& x : xs) {
-        ypred.push_back(l(x)[0]);
-    }
+
+    train(l, xs, ys);
+
+
+    // std::vector<Value> ypred;
+    // for (auto& x : xs) {
+    //     ypred.push_back(l(x)[0]);
+    // }
 
     // for (const auto& pred : ypred) std::cout << pred;
 
-    auto loss = MSE(ys, ypred);
+    // auto loss = MSE(ys, ypred);
     // for (const auto& l : loss) std::cout << l;
     // total loss
     // std::cout << "Total loss: " << loss[0];
 
     // std::cout << l.layers[0].neurons[0].w[0].grad;
 
-    for (const auto& param : l.parameters()) {
-        std::cout << param;
-    }
+    // for (const auto& param : l.parameters()) {
+    //     std::cout << param;
+    // }
 
     return 0;
 }
