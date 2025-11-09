@@ -10,15 +10,16 @@ public:
     Value b;                // bias
     bool nonlin;
 
-    Neuron(int nin, bool nonlin=true) 
+    Neuron(int nin, bool nonlin=true)
         : b(0.0), nonlin(nonlin)
     {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(-1.0, 1.0);
 
+        w.reserve(nin);
         for (int i = 0; i < nin; i++) {
-            w.push_back(Value(dis(gen)));
+            w.emplace_back(dis(gen));
         }
     }
 
@@ -28,7 +29,14 @@ public:
             act += w[i] * x[i];
         }
         // return nonlin ? act.relu() : act;
-        return act.tanh();
+        return nonlin ? act.tanh() : act;
+    }
+
+    std::vector<Value*> parameters() {
+        std::vector<Value*> params;
+        for (auto& wi : w) params.push_back(&wi);
+        params.push_back(&b);
+        return params;
     }
 };
 
@@ -52,10 +60,19 @@ public:
         // return (outs.size() == 1 ? outs[0] : outs);
         return outs;
     }
+
+    std::vector<Value*> parameters() {
+        std::vector<Value*> params;
+        for (auto& n : neurons) {
+            std::vector<Value*> np = n.parameters();
+            params.insert(params.end(), np.begin(), np.end());
+        }
+        return params;
+    }
 };
 
 class MLP {
-private:
+public:
     std::vector<Layer> layers;
 
 public:
@@ -75,6 +92,15 @@ public:
             output = layer(output);
         }
         return output;
+    }
+
+    std::vector<Value*> parameters() {
+        std::vector<Value*> params;
+        for (auto& l : layers) {
+            std::vector<Value*> lp = l.parameters();
+            params.insert(params.end(), lp.begin(), lp.end());
+        }
+        return params;
     }
 };
 
@@ -121,9 +147,15 @@ signed main(void) {
     // for (const auto& pred : ypred) std::cout << pred;
 
     auto loss = MSE(ys, ypred);
-    for (const auto& l : loss) std::cout << l;
+    // for (const auto& l : loss) std::cout << l;
     // total loss
-    std::cout << "Total loss: " << loss[0];
+    // std::cout << "Total loss: " << loss[0];
+
+    // std::cout << l.layers[0].neurons[0].w[0].grad;
+
+    for (const auto& param : l.parameters()) {
+        std::cout << param;
+    }
 
     return 0;
 }
