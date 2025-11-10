@@ -1,106 +1,90 @@
-#include "gradient.cpp"
+#include "../include/gradient.h"
+#include "../include/neural_network.h"
 #include <cstddef>
 #include <memory>
 #include <random>
 #include <variant>
+#include <iostream>
+
+Neuron::Neuron(int nin, bool nonlin) : nonlin(nonlin) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-1.0, 1.0);
+
+    for (int i = 0; i < nin; i++) {
+        w.push_back(std::make_shared<Value>(dis(gen)));
+    }
+    b = std::make_shared<Value>(0.0);
+}
+
+ValPtr Neuron::operator()(const std::vector<ValPtr>& x) {
+    ValPtr act = b;
+    for (size_t i = 0; i < w.size(); i++) {
+        ValPtr wx = *w[i] * x[i];
+        act = *act + wx;
+    }
+    // return nonlin ? act.relu() : act;
+    return nonlin ? act->tanh() : act;
+}
+
+std::vector<ValPtr> Neuron::parameters() {
+    std::vector<ValPtr> params = w;
+    params.push_back(b);
+    return params;
+}
+
+Layer::Layer(int nin, int nout) : nin(nin), nout(nout) {
+    for (int i = 0; i < nout; i++) {
+        neurons.emplace_back(nin);
+    }
+}
+
+using LayerOutput = std::variant<Value, std::vector<Value>>;
+std::vector<ValPtr> Layer::operator()(const std::vector<ValPtr>& x) {
+    std::vector<ValPtr> outs;
+    for (auto& n : neurons) outs.push_back(n(x));
+
+    // return (outs.size() == 1 ? outs[0] : outs);
+    return outs;
+}
+
+std::vector<ValPtr> Layer::parameters() {
+    std::vector<ValPtr> params;
+    for (auto& n : neurons) {
+        auto np = n.parameters();
+        params.insert(params.end(), np.begin(), np.end());
+    }
+    return params;
+}
 
 
-class Neuron {
-public:
-    std::vector<ValPtr> w;   // weights
-    ValPtr b;                // bias
-    bool nonlin;
+MLP::MLP(int nin, const std::vector<int>& nouts) {
+    std::vector<int> sz = {nin};
+    sz.insert(sz.end(), nouts.begin(), nouts.end());
 
-    Neuron(int nin, bool nonlin=true) : nonlin(nonlin) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(-1.0, 1.0);
-
-        for (int i = 0; i < nin; i++) {
-            w.push_back(std::make_shared<Value>(dis(gen)));
-        }
-        b = std::make_shared<Value>(0.0);
+    for (size_t i = 0; i < nouts.size(); i++) {
+        layers.emplace_back(sz[i], sz[i+1]);
     }
 
-    ValPtr operator()(const std::vector<ValPtr>& x) {
-        ValPtr act = b;
-        for (size_t i = 0; i < w.size(); i++) {
-            ValPtr wx = *w[i] * x[i];
-            act = *act + wx;
-        }
-        // return nonlin ? act.relu() : act;
-        return nonlin ? act->tanh() : act;
+}
+
+std::vector<ValPtr> MLP::operator()(const std::vector<ValPtr>& x) {
+    auto output = x;
+    for (auto& layer : layers) {
+        output = layer(output);
     }
+    return output;
+}
 
-    std::vector<ValPtr> parameters() {
-        std::vector<ValPtr> params = w;
-        params.push_back(b);
-        return params;
+std::vector<ValPtr> MLP::parameters() {
+    std::vector<ValPtr> params;
+    for (auto& l : layers) {
+        std::vector<ValPtr> lp = l.parameters();
+        params.insert(params.end(), lp.begin(), lp.end());
     }
-};
+    return params;
+}
 
-class Layer {
-public:
-    std::vector<Neuron> neurons;
-    int nin, nout;
-
-    Layer(int nin, int nout) : nin(nin), nout(nout) {
-        for (int i = 0; i < nout; i++) {
-            neurons.emplace_back(nin);
-        }
-    }
-
-    using LayerOutput = std::variant<Value, std::vector<Value>>;
-    std::vector<ValPtr> operator()(const std::vector<ValPtr>& x) {
-        std::vector<ValPtr> outs;
-        for (auto& n : neurons) outs.push_back(n(x));
-
-        // return (outs.size() == 1 ? outs[0] : outs);
-        return outs;
-    }
-
-    std::vector<ValPtr> parameters() {
-        std::vector<ValPtr> params;
-        for (auto& n : neurons) {
-            auto np = n.parameters();
-            params.insert(params.end(), np.begin(), np.end());
-        }
-        return params;
-    }
-};
-
-class MLP {
-public:
-    std::vector<Layer> layers;
-
-public:
-    MLP(int nin, const std::vector<int>& nouts) {
-        std::vector<int> sz = {nin};
-        sz.insert(sz.end(), nouts.begin(), nouts.end());
-
-        for (size_t i = 0; i < nouts.size(); i++) {
-            layers.emplace_back(sz[i], sz[i+1]);
-        }
-
-    }
-
-    std::vector<ValPtr> operator()(const std::vector<ValPtr>& x) {
-        auto output = x;
-        for (auto& layer : layers) {
-            output = layer(output);
-        }
-        return output;
-    }
-
-    std::vector<ValPtr> parameters() {
-        std::vector<ValPtr> params;
-        for (auto& l : layers) {
-            std::vector<ValPtr> lp = l.parameters();
-            params.insert(params.end(), lp.begin(), lp.end());
-        }
-        return params;
-    }
-};
 
 // loss function: Mean-Squared Error
 ValPtr MSE(const std::vector<ValPtr>& ys, const std::vector<ValPtr>& ypred) {
@@ -148,7 +132,7 @@ void train(MLP& l, const std::vector<std::vector<ValPtr>>& input, const std::vec
     for (auto pred : final_pred) std::cout << pred;
 }
 
-
+#if 0
 signed main(void) {
     #if 0
     std::vector<Value> x = {2.0, 3.0, -1.0};
@@ -197,3 +181,4 @@ signed main(void) {
 
     return 0;
 }
+#endif

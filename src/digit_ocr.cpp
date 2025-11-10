@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 
-DigitOCR::DigitOCR() : classifier(3) {}
+DigitOCR::DigitOCR() : classifier(3), nnClassifier({784, 128, 64, 10}) {}
 
 std::vector<TrainingSample> DigitOCR::loadMNISTData(const std::string& imagePath, const std::string& lapelPath) {
     std::vector<TrainingSample> samples;
@@ -13,7 +13,7 @@ std::vector<TrainingSample> DigitOCR::loadMNISTData(const std::string& imagePath
     return samples;
 }
 
-void DigitOCR::trainModel(const std::string& trainingDataPath) {
+void DigitOCR::trainModel(const std::string& trainingDataPath, AlgorithmType algo) {
     MNISTLoader loader;
 
     // load MNIST data
@@ -28,6 +28,9 @@ void DigitOCR::trainModel(const std::string& trainingDataPath) {
     // convert MNIST images to training samples
     auto mnistData = loader.getTrainingData();
     trainingSamples.clear();
+
+    int maxSamplesForNN = (algo == AlgorithmType::NEURAL_NETWORK) ? 50 : mnistData.size();
+    if (algo == AlgorithmType::NEURAL_NETWORK) mnistData.resize(maxSamplesForNN);
 
     std::cout << "Extracting features from " << mnistData.size() << " training images...\n";
 
@@ -58,9 +61,18 @@ void DigitOCR::trainModel(const std::string& trainingDataPath) {
     //     trainingSamples.push_back(sample);
     // }
 
-    // train the classifier
-    classifier.train(trainingSamples);
-    std::cout << "Training completed with " << trainingSamples.size() << " samples\n";
+    // train with the selected algorithm type
+    if (algo == AlgorithmType::KNN) {
+        std::cout << "Training KNN classifier...\n";
+        classifier.train(trainingSamples);
+        std::cout << "KNN training completed with " << trainingSamples.size() << " samples\n";
+    } else {
+        std::cout << "Training Neural Network...\n";
+        nnClassifier.train(trainingSamples, 50, 0.05);  // 50 epochs, 0.01 learning rate
+        std::cout << "Neural Network training completed with " << trainingSamples.size() << " samples\n";
+    }
+
+
 
     // evaluate on traning data
     // float accuracy = classifier.evaluate(trainingSamples);
@@ -68,7 +80,7 @@ void DigitOCR::trainModel(const std::string& trainingDataPath) {
 
 }
 
-std::string DigitOCR::recognize(const ImageMatrix& image) {
+std::string DigitOCR::recognize(const ImageMatrix& image, AlgorithmType algo) {
     auto digits = preprocessor.extractDigits(image);
     std::string result;
 
@@ -82,7 +94,7 @@ std::string DigitOCR::recognize(const ImageMatrix& image) {
 }
 
 // Saving model to a file
-void DigitOCR::saveModel(const std::string& filename) {
+void DigitOCR::saveModel(const std::string& filename, AlgorithmType algo) {
     std::cout << "Saving model to " << filename << "\n";
 
     std::ofstream file(filename, std::ios::binary);
@@ -109,7 +121,7 @@ void DigitOCR::saveModel(const std::string& filename) {
 }
 
 // Loading model from a file
-void DigitOCR::loadModel(const std::string& filename) {
+void DigitOCR::loadModel(const std::string& filename, AlgorithmType algo) {
     std::cout << "Loading model from " << filename << "\n";
 
     std::ifstream file(filename, std::ios::binary);
@@ -141,7 +153,7 @@ void DigitOCR::loadModel(const std::string& filename) {
     std::cout << "Model loaded from " << filename << " with " << sampleCount << " samples\n";
 }
 
-float DigitOCR::evaluateOnTestData(const std::string& testDataPath) {
+float DigitOCR::evaluateOnTestData(const std::string& testDataPath, AlgorithmType algo) {
     if (!isTrained()) {
         std::cerr << "Error: Model is not trained yet!\n";
         return 0.0f;
@@ -169,9 +181,14 @@ float DigitOCR::evaluateOnTestData(const std::string& testDataPath) {
     }
 
     // Evaluate with KNN classifier
-    float accuracy = classifier.evaluate(testSamples);
+    float KNNaccuracy = classifier.evaluate(testSamples);
 
-    std::cout << "Test Accuracy: " << accuracy * 100 << "%\n";
+    std::cout << "KNN Test Accuracy: " << KNNaccuracy * 100 << "%\n";
 
-    return accuracy;
+    // Evaluate with Neural Network classifier
+    float NNaccuracy = nnClassifier.evaluate(testSamples);
+
+    std::cout << "Neural Network Test Accuracy: " << NNaccuracy * 100 << "%\n";
+
+    return KNNaccuracy;
 }

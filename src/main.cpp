@@ -9,12 +9,13 @@ void CLI::run() {
     while(true) {
         clearScreen();
         std::cout << "=== Digit OCR ===\n";
-        std::cout << "1. Train Model\n";
-        std::cout << "2. Test on MNIST\n"; 
-        std::cout << "3. Test on Real Images\n";
-        std::cout << "4. Run Algorithm Tests\n";
-        std::cout << "5. Benchmark Performance\n";
-        std::cout << "6. Exit\n";
+        std::cout << "1. Train KNN Model\n";
+        std::cout << "2. Train Neural Network Model\n";
+        std::cout << "3. Test on MNIST\n";
+        std::cout << "4. Test on Real Images\n";
+        std::cout << "5. Run Algorithm Tests\n";
+        std::cout << "6. Benchmark Performance\n";
+        std::cout << "7. Exit\n";
         std::cout << "Choose: ";
 
         unsigned short choice;
@@ -56,7 +57,7 @@ void CLI::trainingMenu() {
         std::cout << "Enter path to MNIST data folder: ";
         std::cin >> dataPath;
 
-        ocr.trainModel(dataPath);
+        ocr.trainModel(dataPath, AlgorithmType::NEURAL_NETWORK);
         // ocr.saveModel("trained_model.dat");
         std::cout << "Training completed and model saved!\n";
     } else if (choice == 2) {
@@ -99,7 +100,7 @@ void CLI::testingMenu() {
         std::cin >> dataPath;
 
         std::cout << "Evaluating on test data...\n";
-        float accuracy = ocr.evaluateOnTestData(dataPath);
+        float accuracy = ocr.evaluateOnTestData(dataPath, AlgorithmType::NEURAL_NETWORK);
 
         // Result
         std::cout << "\n=== Performance Analysis ===\n";
