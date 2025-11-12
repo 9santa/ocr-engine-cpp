@@ -1,6 +1,8 @@
 #include "../include/cli.h"
 #include "../include/digit_ocr.h"
+#include "../test/test_suite.h"
 #include "../include/bmp_reader.h"
+#include "image_matrix.h"
 #include <iostream>
 #include <string>
 
@@ -9,13 +11,12 @@ void CLI::run() {
     while(true) {
         clearScreen();
         std::cout << "=== Digit OCR ===\n";
-        std::cout << "1. Train KNN Model\n";
-        std::cout << "2. Train Neural Network Model\n";
-        std::cout << "3. Test on MNIST\n";
-        std::cout << "4. Test on Real Images\n";
+        std::cout << "1. Train KNN | Neural Network Model\n";
+        std::cout << "2. Test on MNIST\n";
+        std::cout << "3. Test on Real Images\n";
+        std::cout << "4. Benchmark Performance\n";
         std::cout << "5. Run Algorithm Tests\n";
-        std::cout << "6. Benchmark Performance\n";
-        std::cout << "7. Exit\n";
+        std::cout << "6. Exit\n";
         std::cout << "Choose: ";
 
         unsigned short choice;
@@ -53,13 +54,23 @@ void CLI::trainingMenu() {
     std::cin >> choice;
 
     if (choice == 1) {
+        std::cout << "===Choose model type===\n";
+        std::cout << "1. Neural Network\n";
+        std::cout << "2. KNN Classifier\n";
+        unsigned short choice;
+        std::cin >> choice;
+        AlgorithmType type = (choice == 1 ? AlgorithmType::NEURAL_NETWORK : AlgorithmType::KNN);
+
+
         std::string dataPath;
         std::cout << "Enter path to MNIST data folder: ";
         std::cin >> dataPath;
 
-        ocr.trainModel(dataPath, AlgorithmType::NEURAL_NETWORK);
+        ocr.trainModel(dataPath, type);
+
         // ocr.saveModel("trained_model.dat");
         std::cout << "Training completed and model saved!\n";
+
     } else if (choice == 2) {
         std::string filename;
         std::cout << "Enter model filename (default: trained_model.dat): ";
@@ -127,10 +138,38 @@ void CLI::showMainMenu() {
 }
 
 void CLI::realImageMenu() {
-    return;
+    clearScreen();
+    std::cout << "Enter BMP file path: ";
+    std::string path;
+    std::cin >> path;
+
+    ImageMatrix img;
+    if (!BMPReader::loadBMP(path, img)) {
+        std::cerr << "Failed to load image!\n";
+        pressAnyKeyToContinue();
+        return;
+    }
+
+    std::cout << "Recognizing digits...\n";
+    std::string prediction = ocr.recognize(img);
+    std::cout << "Detected number: " << prediction << "\n";
+    pressAnyKeyToContinue();
 }
 
 void CLI::benchmarkMenu() {
+    clearScreen();
+    std::cout << "=== Testing Menu===\n";
+    std::cout << "1. Test KNN Algorithm\n";
+
+    unsigned short choice;
+    std::cin >> choice;
+
+
+    if (choice == 1) {
+        testSuite.testKNN();
+    }
+
+
     return;
 }
 

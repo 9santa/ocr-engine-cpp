@@ -1,7 +1,7 @@
 #include "../include/knn_classifier.h"
 #include <iostream>
 
-signed main(void) {
+void testKNN(void) {
     KNNClassifier knn(3);
 
     // simple training data
@@ -25,6 +25,4 @@ signed main(void) {
     float accuracy = knn.evaluate(trainingData);
     std::cout << "Accuracy: " << accuracy * 100 << "%" << std::endl;
 
-
-    return 0;
 }
