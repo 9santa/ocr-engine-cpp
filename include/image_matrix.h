@@ -3,7 +3,6 @@
 #define IMAGE_MATRIX_H
 
 #include <vector>
-#include <cstdint>
 #include <string>
 
 class ImageMatrix {

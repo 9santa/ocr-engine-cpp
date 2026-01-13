@@ -1,6 +1,4 @@
-#include "../include/feature_extractor.h"
-#include <numeric>
-#include <ranges>
+#include "feature_extractor.h"
 
 FeatureExtractor::FeatureExtractor() {}
 

@@ -1,6 +1,6 @@
-#include "../include/digit_ocr.h"
-#include "../include/mnist_loader.h"
-#include "../include/preprocessor.h"
+#include "digit_ocr.h"
+#include "mnist_loader.h"
+#include "preprocessor.h"
 #include "knn_classifier.h"
 #include <fstream>
 #include <iostream>
@@ -54,13 +54,6 @@ void DigitOCR::trainModel(const std::string& trainingDataPath, AlgorithmType alg
 
     std::cout << "\n";
 
-    // for (const auto& mnistImage : mnistData) {
-    //     TrainingSample sample;
-    //     sample.features = featureExtractor.extractFeatures(mnistImage.image);
-    //     sample.label = mnistImage.label;
-    //     trainingSamples.push_back(sample);
-    // }
-
     // train with the selected algorithm type
     if (algo == AlgorithmType::KNN) {
         std::cout << "Training KNN classifier...\n";
@@ -68,16 +61,9 @@ void DigitOCR::trainModel(const std::string& trainingDataPath, AlgorithmType alg
         std::cout << "KNN training completed with " << trainingSamples.size() << " samples\n";
     } else {
         std::cout << "Training Neural Network...\n";
-        nnClassifier.train(trainingSamples, 50, 0.05);  // 50 epochs, 0.01 learning rate
+        nnClassifier.train(trainingSamples, 20, 0.075f);  // 50 epochs, 0.01 learning rate
         std::cout << "Neural Network training completed with " << trainingSamples.size() << " samples\n";
     }
-
-
-
-    // evaluate on traning data
-    // float accuracy = classifier.evaluate(trainingSamples);
-    // std::cout << "Training accuracy: " << accuracy * 100 << "%\n";
-
 }
 
 std::string DigitOCR::recognize(const ImageMatrix& image, AlgorithmType algo) {

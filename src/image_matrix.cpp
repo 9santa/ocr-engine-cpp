@@ -1,6 +1,4 @@
-#include "../include/image_matrix.h"
-#include <fstream>
-#include <stdexcept>
+#include "image_matrix.h"
 #include <algorithm>
 
 // constructors

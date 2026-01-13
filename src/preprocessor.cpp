@@ -1,4 +1,4 @@
-#include "../include/preprocessor.h"
+#include "preprocessor.h"
 #include <algorithm>
 #include <queue>
 
@@ -197,7 +197,7 @@ std::vector<ImageMatrix> Preprocessor::extractDigits(const ImageMatrix& image) {
 
     for (const auto& box : digitBoxes) {
         ImageMatrix digit(box.width, box.height, 1);
-        
+
         for (int y = 0; y < box.height; y++) {
             for (int x = 0; x < box.width; x++) {
                 int imageY = box.y + y;
