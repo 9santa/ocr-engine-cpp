@@ -16,8 +16,8 @@ public:
     MNISTLoader();
     bool loadTrainingData(const std::string& imagePath, const std::string& labelPath);
     bool loadTestData(const std::string& imagePath, const std::string& labelPath);
-    std::vector<MNISTImage> getTrainingData() const;
-    std::vector<MNISTImage> getTestData() const;
+    const std::vector<MNISTImage>& getTrainingData() const;
+    const std::vector<MNISTImage>& getTestData() const;
 
 private:
     std::vector<MNISTImage> trainingData;

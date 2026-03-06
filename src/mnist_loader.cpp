@@ -107,10 +107,10 @@ bool MNISTLoader::loadTestData(const std::string& imagePath, const std::string& 
     return true;
 }
 
-std::vector<MNISTImage> MNISTLoader::getTrainingData() const {
+const std::vector<MNISTImage>& MNISTLoader::getTrainingData() const {
     return trainingData;
 }
 
-std::vector<MNISTImage> MNISTLoader::getTestData() const {
+const std::vector<MNISTImage>& MNISTLoader::getTestData() const {
     return testData;
 }
