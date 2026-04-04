@@ -64,13 +64,16 @@ int KNNClassifier::predict(const std::vector<float>& features) const {
 }
 
 float KNNClassifier::evaluate(const std::vector<TrainingSample>& testData) const {
-    int correct = 0;
-    int smallTest = std::min(100, (int)testData.size());
-
-    for (int i = 0; i < smallTest; i++) {
-        int prediction = predict(testData[i].features);
-        if (prediction == testData[i].label) correct++;
+    if (!trainingData || trainingData->empty() || testData.empty()) {
+        return 0.0f;
     }
 
-    return static_cast<float>(correct) / smallTest;
+    int correct = 0;
+
+    for (const auto& sample : testData) {
+        int prediction = predict(sample.features);
+        if (prediction == sample.label) correct++;
+    }
+
+    return static_cast<float>(correct) / static_cast<float>(testData.size());
 }
