@@ -2,7 +2,5 @@ third_party/
 
 build/
 .cache/
-test/
-data/
 
 compile_commands.json
