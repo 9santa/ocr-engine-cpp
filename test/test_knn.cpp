@@ -1,4 +1,4 @@
-#include "../include/knn_classifier.h"
+#include "../include/baselines/knn/knn_classifier.h"
 #include <iostream>
 
 void testKNN(void) {
@@ -13,7 +13,7 @@ void testKNN(void) {
     };
 
     // train
-    knn.train(trainingData);
+    knn.train(&trainingData);
 
     // test prediction
     std::vector<float> testFeatures = {0.15, 0.15};
