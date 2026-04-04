@@ -1,0 +1,11 @@
+To compile and run the tests:
+
+1) Compile all necessary files
+g++ -I../include -c ../src/baselines/knn/knn_classifier.cpp -o knn_classifier.o
+g++ -c test_knn.cpp -o test_knn.o
+
+2) Link them together
+g++ knn_classifier.o test_knn.o -o test_knn
+
+3) Run the test
+./test_knn
