@@ -37,20 +37,25 @@ void DigitOCR::trainModel(const std::string& trainingDataPath, AlgorithmType alg
 
     const auto& mnistData = loader.getTrainingData();
     std::cout << "Extracting features from " << mnistData.size() << " training images...\n";
-    trainingSamples = loadMNISTSamples(mnistData, algo);
 
     if (algo == AlgorithmType::KNN) {
+        knnTrainingSamples = loadMNISTSamples(mnistData, algo);
+
         std::cout << "Training KNN classifier...\n";
-        classifier.train(&trainingSamples);
+        classifier.train(&knnTrainingSamples);
         knnTrained = true;
-        std::cout << "KNN training completed with " << trainingSamples.size() << " samples\n";
+
+        std::cout << "KNN training completed with " << knnTrainingSamples.size() << " samples\n";
         return;
     }
 
+    std::vector<TrainingSample> neuralSamples = loadMNISTSamples(mnistData, algo);
+
     std::cout << "Training Neural Network...\n";
-    nnClassifier.train(trainingSamples, 20, 0.075f);
+    nnClassifier.train(neuralSamples, 20, 0.075f);
     neuralNetworkTrained = true;
-    std::cout << "Neural Network training completed with " << trainingSamples.size() << " samples\n";
+
+    std::cout << "Neural Network training completed with " << knnTrainingSamples.size() << " samples\n";
     nnClassifier.save_model("digit_model.bin");
 }
 
@@ -62,6 +67,7 @@ std::string DigitOCR::recognize(const ImageMatrix& image, AlgorithmType algo) {
         const auto features = (algo == AlgorithmType::KNN)
             ? featureExtractor.extractKNNFeatures(digit)
             : featureExtractor.extractNeuralNetworkFeatures(digit);
+
         const int prediction = (algo == AlgorithmType::KNN)
             ? classifier.predict(features)
             : nnClassifier.predict_digit(features);
@@ -89,7 +95,7 @@ void DigitOCR::loadModel(const std::string& filename, AlgorithmType algo) {
         return;
     }
 
-    trainingSamples.clear();
+    knnTrainingSamples.clear();
     size_t sampleCount = 0;
     file.read(reinterpret_cast<char*>(&sampleCount), sizeof(sampleCount));
 
@@ -103,10 +109,10 @@ void DigitOCR::loadModel(const std::string& filename, AlgorithmType algo) {
         sample.features.resize(featuresCount);
         file.read(reinterpret_cast<char*>(sample.features.data()), featuresCount * sizeof(float));
 
-        trainingSamples.push_back(std::move(sample));
+        knnTrainingSamples.push_back(std::move(sample));
     }
 
-    classifier.train(&trainingSamples);
+    classifier.train(&knnTrainingSamples);
     knnTrained = true;
     std::cout << "Model loaded from " << filename << " with " << sampleCount << " samples\n";
 }
@@ -142,11 +148,11 @@ float DigitOCR::evaluateOnTestData(const std::string& testDataPath, AlgorithmTyp
 }
 
 float DigitOCR::evaluateOnTrainingData() {
-    if (trainingSamples.empty()) {
+    if (knnTrainingSamples.empty()) {
         return 0.0f;
     }
 
-    return classifier.evaluate(trainingSamples);
+    return classifier.evaluate(knnTrainingSamples);
 }
 
 void DigitOCR::confusionMatrix(const std::vector<MNISTImage>&, AlgorithmType) {}
@@ -163,10 +169,10 @@ void DigitOCR::saveModel(const std::string& filename, AlgorithmType algo) {
         return;
     }
 
-    const size_t sampleCount = trainingSamples.size();
+    const size_t sampleCount = knnTrainingSamples.size();
     file.write(reinterpret_cast<const char*>(&sampleCount), sizeof(sampleCount));
 
-    for (const auto& sample : trainingSamples) {
+    for (const auto& sample : knnTrainingSamples) {
         file.write(reinterpret_cast<const char*>(&sample.label), sizeof(sample.label));
 
         const size_t featureCount = sample.features.size();

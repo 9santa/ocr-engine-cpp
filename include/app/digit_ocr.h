@@ -40,9 +40,11 @@ private:
     FeatureExtractor featureExtractor;
     KNNClassifier classifier;
     NeuralNetwork nnClassifier;
+
     bool knnTrained = false;
     bool neuralNetworkTrained = false;
-    std::vector<TrainingSample> trainingSamples;
+
+    std::vector<TrainingSample> knnTrainingSamples;
 
     std::vector<TrainingSample> loadMNISTSamples(const std::vector<MNISTImage>& data, AlgorithmType algo) const;
 };
