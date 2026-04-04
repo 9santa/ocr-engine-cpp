@@ -1,14 +1,22 @@
 #include "app/cli.h"
 
+#include "app/digit_ocr.h"
 #include "io/bmp_reader.h"
 
 #include <iostream>
 #include <string>
 
+namespace {
+const char* algorithmName(AlgorithmType algo) {
+    return (algo == AlgorithmType::KNN) ? "KNN" : "Neural Network";
+}
+} // namespace
+
 void CLI::run() {
     while (true) {
         clearScreen();
         std::cout << "=== Digit OCR ===\n";
+        std::cout << "Current algorithm: " << algorithmName(currentAlgorithm) << "\n\n";
         std::cout << "1. Train KNN | Neural Network Model\n";
         std::cout << "2. Test on MNIST\n";
         std::cout << "3. Test on Real Images\n";
@@ -66,36 +74,48 @@ void CLI::trainingMenu() {
 
         unsigned short algorithmChoice = 0;
         std::cin >> algorithmChoice;
-        const AlgorithmType type =
-            (algorithmChoice == 1 ? AlgorithmType::NEURAL_NETWORK : AlgorithmType::KNN);
+
+        currentAlgorithm = (algorithmChoice == 1 ? AlgorithmType::NEURAL_NETWORK : AlgorithmType::KNN);
 
         std::string dataPath;
         std::cout << "Enter path to MNIST data folder: ";
         std::cin >> dataPath;
 
-        ocr.trainModel(dataPath, type);
-        std::cout << "Training completed.\n";
+        ocr.trainModel(dataPath, currentAlgorithm);
+        std::cout << "Training completed for " << algorithmName(currentAlgorithm) << ".\n";
     } else if (choice == 2) {
+        std::cout << "=== Choose model type to load ===\n";
+        std::cout << "1. Neural Network\n";
+        std::cout << "2. KNN Classifier\n";
+
+        unsigned short algorithmChoice = 0;
+        std::cin >> algorithmChoice;
+
+        currentAlgorithm = (algorithmChoice == 1 ? AlgorithmType::NEURAL_NETWORK : AlgorithmType::KNN);
+
         std::string filename;
         std::cout << "Enter model filename (default: trained_model.dat): ";
         std::cin.ignore();
         std::getline(std::cin, filename);
 
         if (filename.empty()) {
-            filename = "trained_model.dat";
+            filename = (currentAlgorithm == AlgorithmType::NEURAL_NETWORK)
+                ? "digit_model.bin"
+                : "trained_model.dat";
         }
 
-        ocr.loadModel(filename);
-        std::cout << "Model loaded successfully!\n";
+        ocr.loadModel(filename, currentAlgorithm);
+        std::cout << "Model loaded successfully for " << algorithmName(currentAlgorithm) << "!\n";
     }
 }
 
 void CLI::testingMenu() {
     clearScreen();
     std::cout << "=== Testing on MNIST ===\n";
+    std::cout << "Selected algorithm: " << algorithmName(currentAlgorithm) << "\n";
 
     if (!ocr.isTrained()) {
-        std::cerr << "Error: Model not trained yet! Please train first!\n";
+        std::cerr << "Error: Selected model is not trained yet! Please train or load it first.\n";
         pressAnyKeyToContinue();
         return;
     }
@@ -108,7 +128,9 @@ void CLI::testingMenu() {
     unsigned short choice = 0;
     std::cin >> choice;
 
-    if (choice == 2) {
+    if (choice == 1) {
+        std::cout << "Training-data evalutaion is currently implemented only for KNN.\n";
+    } else if (choice == 2) {
         std::string dataPath;
         std::cout << "Enter path to MNIST data folder: ";
         std::cin >> dataPath;
@@ -124,7 +146,7 @@ void CLI::testingMenu() {
         } else if (accuracy > 0.85f) {
             std::cout << "Average performance - consider tuning parameters\n";
         } else {
-            std::cout << "Poor performance - check feature extraction or K value\n";
+            std::cout << "Poor performance - check feature extraction, preprocessing, or hyperparameters\n";
         }
     }
 
@@ -137,7 +159,10 @@ void CLI::showMainMenu() {}
 
 void CLI::realImageMenu() {
     clearScreen();
+    std::cout << "=== Real Image Recognition ===\n";
+    std::cout << "Selected algorithm: " << algorithmName(currentAlgorithm) << "\n";
     std::cout << "Enter BMP file path: ";
+
     std::string path;
     std::cin >> path;
 
@@ -148,8 +173,12 @@ void CLI::realImageMenu() {
         return;
     }
 
+    if (!ocr.isTrained(currentAlgorithm)) {
+        std::cerr << "Selected model is not trained or loaded yet!\n";
+    }
+
     std::cout << "Recognizing digits...\n";
-    const std::string prediction = ocr.recognize(img);
+    const std::string prediction = ocr.recognize(img, currentAlgorithm);
     std::cout << "Detected number: " << prediction << "\n";
     pressAnyKeyToContinue();
 }

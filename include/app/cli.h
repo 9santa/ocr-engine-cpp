@@ -21,6 +21,7 @@ private:
 
     DigitOCR ocr;
     TestSuite testSuite;
+    AlgorithmType currentAlgorithm = AlgorithmType::KNN;
 };
 
 
