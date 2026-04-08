@@ -75,7 +75,7 @@ void CLI::trainingMenu() {
         unsigned short algorithmChoice = 0;
         std::cin >> algorithmChoice;
 
-        currentAlgorithm = (algorithmChoice == 1 ? AlgorithmType::NEURAL_NETWORK : AlgorithmType::KNN);
+        currentAlgorithm = (algorithmChoice == 1 ? AlgorithmType::NN_SCALAR_AUTODIFF : AlgorithmType::KNN);
 
         std::string dataPath;
         std::cout << "Enter path to MNIST data folder: ";
@@ -91,7 +91,7 @@ void CLI::trainingMenu() {
         unsigned short algorithmChoice = 0;
         std::cin >> algorithmChoice;
 
-        currentAlgorithm = (algorithmChoice == 1 ? AlgorithmType::NEURAL_NETWORK : AlgorithmType::KNN);
+        currentAlgorithm = (algorithmChoice == 1 ? AlgorithmType::NN_SCALAR_AUTODIFF : AlgorithmType::KNN);
 
         std::string filename;
         std::cout << "Enter model filename (default: trained_model.dat): ";
@@ -99,7 +99,7 @@ void CLI::trainingMenu() {
         std::getline(std::cin, filename);
 
         if (filename.empty()) {
-            filename = (currentAlgorithm == AlgorithmType::NEURAL_NETWORK)
+            filename = (currentAlgorithm == AlgorithmType::NN_SCALAR_AUTODIFF)
                 ? "digit_model.bin"
                 : "trained_model.dat";
         }
