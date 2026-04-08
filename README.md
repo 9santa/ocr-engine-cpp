@@ -134,6 +134,10 @@
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ./build/ocr_engine
+
+or
+
+make clean-run
 ```
 
 ---
