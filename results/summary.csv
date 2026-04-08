@@ -1,0 +1,7 @@
+run_name,train_limit,test_limit,learning_rate,batch_size,epochs,final_accuracy
+fastnn_t5000_v500_lr0.02_b64_e10,5000,500,0.02,64,10,0.866
+fastnn_t5000_v500_lr0.01_b64_e10,5000,500,0.01,64,10,0.868
+fastnn_t5000_v500_lr0.03_b64_e10,5000,500,0.03,64,10,0.93
+fastnn_t5000_v500_lr0.02_b128_e20,5000,500,0.02,128,20,0.912
+fastnn_t5000_v500_lr0.04_b128_e10,5000,500,0.04,128,10,0.916
+fastnn_t5000_v500_lr0.02_b32_e10,5000,500,0.02,32,10,0.924
