@@ -80,7 +80,7 @@ std::string DigitOCR::recognize(const ImageMatrix& image, AlgorithmType algo) {
 }
 
 void DigitOCR::loadModel(const std::string& filename, AlgorithmType algo) {
-    if (algo == AlgorithmType::NEURAL_NETWORK) {
+    if (algo == AlgorithmType::NN_SCALAR_AUTODIFF) {
         if (!nnClassifier.load_model(filename)) {
             std::cerr << "Cannot load neural-network model from " << filename << "\n";
         } else {
@@ -160,7 +160,7 @@ float DigitOCR::evaluateOnTrainingData() {
 void DigitOCR::confusionMatrix(const std::vector<MNISTImage>&, AlgorithmType) {}
 
 void DigitOCR::saveModel(const std::string& filename, AlgorithmType algo) {
-    if (algo == AlgorithmType::NEURAL_NETWORK) {
+    if (algo == AlgorithmType::NN_SCALAR_AUTODIFF) {
         nnClassifier.save_model(filename);
         return;
     }
